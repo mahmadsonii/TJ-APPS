@@ -3,7 +3,15 @@
    ============================================================ */
 
 // ── CONFIG ─────────────────────────────────────────────────
+// ⬇ ИНҶО НОМИ ХУДРО НАВИСЕД (як маротиба)
+const GITHUB_USER = 'mahmadsonii';   // ← GitHub username
+const GITHUB_REPO = 'TJ-APPS-';     // ← Repository номи
+
+// Admin танзимоти (танҳо браузери Admin)
 let CFG = JSON.parse(localStorage.getItem('tjapps_cfg') || '{}');
+CFG.user  = GITHUB_USER;
+CFG.repo  = GITHUB_REPO;
+
 let apps = [];
 let isAdmin = false;
 let selectedIcon = '📦';
@@ -29,10 +37,7 @@ function init() {
   setupSwipeGesture();
   setupOverlayClose();
 
-  if (!CFG.user || !CFG.repo || !CFG.token) {
-    openOverlay('setupOverlay');
-    return;
-  }
+  // Ҳама меҳмонон APK-ҳоро мебинанд — Setup лозим нест
   loadApps();
 }
 
@@ -90,19 +95,22 @@ async function saveToGitHub() {
 
 // ── SETUP ─────────────────────────────────────────────────
 function saveSetup() {
-  const user  = qs('#ghUser').value.trim();
-  const repo  = qs('#ghRepo').value.trim();
   const token = qs('#ghToken').value.trim();
   const pass  = qs('#setupPass').value.trim();
 
-  if (!user || !repo || !token || !pass) {
-    toast('❌ Ҳамаи майдонҳоро пур кунед!', true); return;
+  if (!token || !pass) {
+    toast('❌ Token ва Паролро ворид кунед!', true); return;
   }
-  CFG = { user, repo, token, pass };
+  CFG.token = token;
+  CFG.pass  = pass;
   localStorage.setItem('tjapps_cfg', JSON.stringify(CFG));
   closeOverlay('setupOverlay');
   toast('✅ Танзим сохта шуд!');
-  loadApps();
+  // Пароль пурсидан
+  qs('#passInput').value = '';
+  qs('#passError').style.display = 'none';
+  openOverlay('passOverlay');
+  setTimeout(() => qs('#passInput').focus(), 300);
 }
 
 // ── RENDER ────────────────────────────────────────────────
@@ -164,7 +172,11 @@ function doSearch() {
 
 // ── ADMIN ─────────────────────────────────────────────────
 function openAdmin() {
-  if (!CFG.user) { openOverlay('setupOverlay'); return; }
+  // Агар Token ё Пароль нест — Setup нишон диҳ
+  if (!CFG.token || !CFG.pass) {
+    openOverlay('setupOverlay');
+    return;
+  }
   qs('#passInput').value = '';
   qs('#passError').style.display = 'none';
   openOverlay('passOverlay');
@@ -403,3 +415,4 @@ function randColor() {
 
 // ── START ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
+   
