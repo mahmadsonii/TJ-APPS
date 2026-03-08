@@ -11,6 +11,18 @@
 </head>
 <body>
 
+<!-- ═══════════════ PULL TO REFRESH ══════════ -->
+<div id="pullIndicator" style="
+  position:fixed;top:58px;left:50%;
+  transform:translateX(-50%);
+  background:var(--accent);color:#000;
+  padding:7px 18px;border-radius:20px;
+  font-size:0.8rem;font-weight:700;
+  opacity:0;transition:opacity 0.2s;
+  z-index:99;pointer-events:none;
+  font-family:'Outfit',sans-serif;
+">🔄 Навсозӣ</div>
+
 <!-- ═══════════════ SWIPE HINT ═══════════════ -->
 <div class="swipe-hint" id="swipeHint"></div>
 
@@ -237,5 +249,5 @@
 <script src="script.js"></script>
 
 </body>
-        </html>
-  
+      </html>
+        
