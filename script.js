@@ -3,7 +3,15 @@
    ============================================================ */
 
 // ── CONFIG ─────────────────────────────────────────────────
+// ⬇ ИНҶО НОМИ ХУДРО НАВИСЕД (як маротиба)
+const GITHUB_USER = 'mahmadsonii';   // ← GitHub username
+const GITHUB_REPO = 'TJ-APPS-';     // ← Repository номи
+
+// Admin танзимоти (танҳо браузери Admin)
 let CFG = JSON.parse(localStorage.getItem('tjapps_cfg') || '{}');
+CFG.user  = GITHUB_USER;
+CFG.repo  = GITHUB_REPO;
+
 let apps = [];
 let isAdmin = false;
 let selectedIcon = '📦';
@@ -29,10 +37,7 @@ function init() {
   setupSwipeGesture();
   setupOverlayClose();
 
-  if (!CFG.user || !CFG.repo || !CFG.token) {
-    openOverlay('setupOverlay');
-    return;
-  }
+  // Ҳама меҳмонон APK-ҳоро мебинанд — Setup лозим нест
   loadApps();
 }
 
@@ -90,19 +95,22 @@ async function saveToGitHub() {
 
 // ── SETUP ─────────────────────────────────────────────────
 function saveSetup() {
-  const user  = qs('#ghUser').value.trim();
-  const repo  = qs('#ghRepo').value.trim();
   const token = qs('#ghToken').value.trim();
   const pass  = qs('#setupPass').value.trim();
 
-  if (!user || !repo || !token || !pass) {
-    toast('❌ Ҳамаи майдонҳоро пур кунед!', true); return;
+  if (!token || !pass) {
+    toast('❌ Token ва Паролро ворид кунед!', true); return;
   }
-  CFG = { user, repo, token, pass };
+  CFG.token = token;
+  CFG.pass  = pass;
   localStorage.setItem('tjapps_cfg', JSON.stringify(CFG));
   closeOverlay('setupOverlay');
   toast('✅ Танзим сохта шуд!');
-  loadApps();
+  // Пароль пурсидан
+  qs('#passInput').value = '';
+  qs('#passError').style.display = 'none';
+  openOverlay('passOverlay');
+  setTimeout(() => qs('#passInput').focus(), 300);
 }
 
 // ── RENDER ────────────────────────────────────────────────
@@ -164,7 +172,11 @@ function doSearch() {
 
 // ── ADMIN ─────────────────────────────────────────────────
 function openAdmin() {
-  if (!CFG.user) { openOverlay('setupOverlay'); return; }
+  // Агар Token ё Пароль нест — Setup нишон диҳ
+  if (!CFG.token || !CFG.pass) {
+    openOverlay('setupOverlay');
+    return;
+  }
   qs('#passInput').value = '';
   qs('#passError').style.display = 'none';
   openOverlay('passOverlay');
@@ -189,6 +201,8 @@ function openAddSheet() {
   qs('#appVersion').value = '';
   qs('#appSize').value = '';
   qs('#appUrl').value = '';
+  qs('#appDesc').value = '';
+  qs('#appVideo').value = '';
   qs('#appCat').value = 'app';
   selectedIcon = '📦'; iconDataUrl = null;
   qs('#iconPreview').innerHTML = '<span>📦</span>';
@@ -210,6 +224,8 @@ async function addApp() {
     size: qs('#appSize').value.trim(),
     cat: qs('#appCat').value,
     url: qs('#appUrl').value.trim(),
+    desc: qs('#appDesc').value.trim(),
+    video: qs('#appVideo').value.trim(),
     color: randColor(),
     added: Date.now()
   };
@@ -254,7 +270,33 @@ function openDetail(idx) {
     ? `<img src="${app.iconUrl}" alt="">`
     : (app.icon || '📦');
 
-  const dlBtn = app.url
+  // Тавсиф
+  const descHTML = app.desc
+    ? `<div class="app-desc">${esc(app.desc)}</div>` : '';
+
+  // Видео (YouTube embed)
+  let videoHTML = '';
+  if (app.video) {
+    const ytId = getYouTubeId(app.video);
+    if (ytId) {
+      videoHTML = `
+        <div class="video-wrap">
+          <iframe
+            src="https://www.youtube.com/embed/${ytId}"
+            frameborder="0"
+            allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          ></iframe>
+        </div>`;
+    } else {
+      videoHTML = `
+        <div class="video-wrap">
+          <video controls playsinline style="width:100%;border-radius:12px;">
+            <source src="${app.video}">
+          </video>
+        </div>`;
+    }
+  }
     ? `<a href="${app.url}" class="btn-download" target="_blank">⬇ СКАЧАТИ APK${app.size ? ' — ' + esc(app.size) : ''}</a>`
     : `<button class="btn-download disabled">⬇ Линк нест</button>`;
 
@@ -285,6 +327,8 @@ function openDetail(idx) {
       </div>
     </div>
     ${dlBtn}
+    ${videoHTML}
+    ${descHTML}
     ${adminBtns}
     <button class="btn-secondary" onclick="closeOverlay('detailOverlay')" style="margin-top:10px">✕ Пӯшидан</button>
   `;
@@ -347,41 +391,141 @@ function toast(msg, isErr = false) {
   t._timer = setTimeout(() => { t.className = 'toast'; }, 2800);
 }
 
-// ── SWIPE GESTURE (назад) ─────────────────────────────────
+// ── SWIPE GESTURE — пурра ─────────────────────────────────
 function setupSwipeGesture() {
-  let startX = 0, startY = 0;
+  let startX = 0, startY = 0, startTime = 0;
+  let dragging = false;
+  let activeSheet = null;
+  let sheetStartY = 0;
   const hint = qs('#swipeHint');
-  const EDGE = 30;
+  const EDGE = 35;       // лаби чап (px)
+  const MIN_DX = 55;     // ҳадди ақали кашидан
+  const MAX_DY = 90;     // ҳадди ақали амудӣ
+
+  // ── SHEET DRAG (поён кашидан барои пӯшидан) ──
+  function getTopSheet() {
+    const all = [...qsa('.overlay.open')];
+    return all.length ? all[all.length - 1].querySelector('.sheet') : null;
+  }
 
   document.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
+    startX    = e.touches[0].clientX;
+    startY    = e.touches[0].clientY;
+    startTime = Date.now();
+    dragging  = false;
+    activeSheet = null;
+
+    // Sheet drag — агар touch дар sheet handle ё боло бошад
+    const sheet = getTopSheet();
+    if (sheet) {
+      const rect = sheet.getBoundingClientRect();
+      const touchY = e.touches[0].clientY;
+      // 60px боло — drag zone
+      if (touchY >= rect.top && touchY <= rect.top + 60) {
+        activeSheet = sheet;
+        sheetStartY = touchY;
+        sheet.style.transition = 'none';
+      }
+    }
+
+    // Swipe лаб
     if (startX < EDGE) hint.classList.add('show');
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
-    if (startX < EDGE) {
-      const dx = e.touches[0].clientX - startX;
-      if (dx > 0) {
-        hint.style.width = Math.min(dx / 3, 12) + 'px';
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    // Sheet drag поён
+    if (activeSheet) {
+      const moved = e.touches[0].clientY - sheetStartY;
+      if (moved > 0) {
+        activeSheet.style.transform = `translateY(${moved}px)`;
+        dragging = true;
       }
+      return;
+    }
+
+    // Swipe лаб — indicator
+    if (startX < EDGE && dx > 0) {
+      hint.style.width = Math.min(dx / 2.5, 14) + 'px';
+      dragging = true;
     }
   }, { passive: true });
 
   document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    const endX  = e.changedTouches[0].clientX;
+    const endY  = e.changedTouches[0].clientY;
+    const dx    = endX - startX;
+    const dy    = Math.abs(endY - startY);
+    const dt    = Date.now() - startTime;
+
+    // Reset hint
     hint.classList.remove('show');
     hint.style.width = '4px';
 
-    if (startX < EDGE && dx > 60 && dy < 80) {
-      // Закрыть верхний открытый overlay
-      const opened = [...qsa('.overlay.open')].pop();
-      if (opened) {
-        opened.classList.remove('open');
+    // ── Sheet drag release ──
+    if (activeSheet) {
+      const moved = endY - sheetStartY;
+      activeSheet.style.transition = '';
+      if (moved > 100 || (moved > 40 && dt < 250)) {
+        // Пӯшидан
+        activeSheet.style.transform = '';
+        const overlay = activeSheet.closest('.overlay');
+        if (overlay) {
+          overlay.style.transition = 'opacity 0.2s';
+          overlay.style.opacity   = '0';
+          setTimeout(() => {
+            overlay.classList.remove('open');
+            overlay.style.opacity = '';
+            overlay.style.transition = '';
+          }, 200);
+        }
+      } else {
+        // Бозгашт
+        activeSheet.style.transform = '';
+      }
+      activeSheet = null;
+      return;
+    }
+
+    // ── Swipe аз лаби чап ──
+    if (startX < EDGE && dx > MIN_DX && dy < MAX_DY) {
+      const opened = [...qsa('.overlay.open')];
+      if (opened.length) {
+        // Overlay пӯшидан бо animation
+        const top = opened[opened.length - 1];
+        const sh  = top.querySelector('.sheet');
+        if (sh) {
+          sh.style.transition = 'transform 0.25s ease';
+          sh.style.transform  = 'translateY(110%)';
+          setTimeout(() => {
+            top.classList.remove('open');
+            sh.style.transition = '';
+            sh.style.transform  = '';
+          }, 250);
+        } else {
+          top.classList.remove('open');
+        }
       }
     }
+
+    dragging = false;
   }, { passive: true });
+
+  // ── Hardware back button (Android) ──
+  window.addEventListener('popstate', () => {
+    const opened = [...qsa('.overlay.open')];
+    if (opened.length) {
+      opened[opened.length - 1].classList.remove('open');
+    }
+  });
+
+  // History entry барои back button
+  history.pushState({ tjapps: true }, '');
+  window.addEventListener('popstate', () => {
+    history.pushState({ tjapps: true }, '');
+  });
 }
 
 // ── UTILS ─────────────────────────────────────────────────
@@ -397,9 +541,15 @@ function esc(str) {
     .replace(/"/g,'&quot;');
 }
 
+function getYouTubeId(url) {
+  const r = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return r ? r[1] : null;
+}
+
 function randColor() {
   return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
 // ── START ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
+     
