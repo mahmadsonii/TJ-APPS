@@ -88,22 +88,11 @@
 <div class="overlay" id="setupOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">⚙️ Танзимоти GitHub</div>
+    <div class="sheet-title">⚙️ Танзимоти Admin</div>
 
     <div class="info-box">
-      Ин <strong>як маротиба</strong> лозим аст.<br>
-      <strong>GitHub Token</strong> барои нигоҳ доштани APK-ҳо лозим аст.
-      Пас аз танзим ҳама корбарон APK-ҳоро мебинанд.
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">GitHub Username</label>
-      <input class="form-input" id="ghUser" type="text" placeholder="масалан: tjappsadmin" autocapitalize="none">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Repository номи</label>
-      <input class="form-input" id="ghRepo" type="text" placeholder="масалан: tjapps" value="tjapps" autocapitalize="none">
+      Ин танҳо барои <strong>Admin</strong> лозим аст.<br>
+      Меҳмонон бидуни танзим APK-ҳоро мебинанд. ✅
     </div>
 
     <div class="form-group">
@@ -112,16 +101,17 @@
       <p class="form-hint">
         github.com → Settings → Developer settings →
         Personal access tokens → Tokens (classic) →
-        Generate new token → <strong>repo ✅</strong> → Copy
+        Generate → <strong>repo ✅</strong> → Copy
       </p>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Пароли Admin (вебсайт)</label>
+      <label class="form-label">Пароли Admin</label>
       <input class="form-input" id="setupPass" type="password" placeholder="Пароли худро интихоб кун" autocomplete="new-password">
     </div>
 
-    <button class="btn-primary" onclick="saveSetup()">✅ Нигоҳ доштан ва Оғоз</button>
+    <button class="btn-primary" onclick="saveSetup()">✅ Нигоҳ доштан</button>
+    <button class="btn-secondary" onclick="closeOverlay('setupOverlay')">✕ Бекор кардан</button>
   </div>
 </div>
 
@@ -208,6 +198,19 @@
       <p class="form-hint">Google Drive, Telegram, MediaFire, Mega...</p>
     </div>
 
+    <!-- DESCRIPTION -->
+    <div class="form-group">
+      <label class="form-label">Тавсиф (Описание)</label>
+      <textarea class="form-input" id="appDesc" rows="3" placeholder="Барнома дар бораи чист? Хусусиятҳои он..." style="resize:none;line-height:1.5;"></textarea>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="form-group">
+      <label class="form-label">Линки Видео (ихтиёрӣ)</label>
+      <input class="form-input" id="appVideo" type="url" placeholder="YouTube ё mp4 линк...">
+      <p class="form-hint">YouTube линк ё видеои мустақим — барои намоиш дар барнома</p>
+    </div>
+
     <!-- SAVING -->
     <div class="saving-row" id="savingRow">
       <div class="spinner"></div>
@@ -234,4 +237,5 @@
 <script src="script.js"></script>
 
 </body>
-</html>
+        </html>
+  
