@@ -35,6 +35,7 @@ const COLORS = [
 function init() {
   renderEmojiGrid();
   setupSwipeGesture();
+  setupPullToRefresh();
   setupOverlayClose();
 
   // Ҳама меҳмонон APK-ҳоро мебинанд — Setup лозим нест
@@ -52,11 +53,21 @@ function apiUrl() {
 async function loadApps() {
   showLoader();
   try {
-    const res = await fetch(rawUrl());
-    if (!res.ok) throw new Error();
-    apps = await res.json();
-  } catch {
+    // 8 сония timeout
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch(rawUrl(), { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    apps = text.trim() ? JSON.parse(text) : [];
+  } catch (e) {
     apps = [];
+    if (e.name === 'AbortError') {
+      toast('⚠️ Интернет суст аст — дубора кӯшиш кунед', true);
+    }
   }
   renderApps();
 }
@@ -391,6 +402,40 @@ function toast(msg, isErr = false) {
   t._timer = setTimeout(() => { t.className = 'toast'; }, 2800);
 }
 
+// ── PULL TO REFRESH ───────────────────────────────────────
+function setupPullToRefresh() {
+  let startY = 0, pulling = false;
+  const indicator = qs('#pullIndicator');
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0 && !qsa('.overlay.open').length) {
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!startY) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 10 && dy < 100) {
+      pulling = true;
+      indicator.style.opacity = Math.min(dy / 60, 1);
+      indicator.style.transform = `translateY(${Math.min(dy - 10, 50)}px)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!startY) return;
+    const dy = e.changedTouches[0].clientY - startY;
+    indicator.style.opacity = '0';
+    indicator.style.transform = '';
+    if (pulling && dy > 60) {
+      loadApps();
+      toast('🔄 Навсозӣ мешавад...');
+    }
+    startY = 0; pulling = false;
+  }, { passive: true });
+}
+
 // ── SWIPE GESTURE — пурра ─────────────────────────────────
 function setupSwipeGesture() {
   let startX = 0, startY = 0, startTime = 0;
@@ -552,4 +597,3 @@ function randColor() {
 
 // ── START ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
-     
