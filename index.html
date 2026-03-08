@@ -2,8 +2,8 @@
 <html lang="tg">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#000000">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>TJ APPS</title>
@@ -11,243 +11,184 @@
 </head>
 <body>
 
-<!-- ═══════════════ PULL TO REFRESH ══════════ -->
-<div id="pullIndicator" style="
-  position:fixed;top:58px;left:50%;
-  transform:translateX(-50%);
-  background:var(--accent);color:#000;
-  padding:7px 18px;border-radius:20px;
-  font-size:0.8rem;font-weight:700;
-  opacity:0;transition:opacity 0.2s;
-  z-index:99;pointer-events:none;
-  font-family:'Outfit',sans-serif;
-">🔄 Навсозӣ</div>
+<!-- PULL INDICATOR -->
+<div class="pull" id="pull">🔄 Навсозӣ</div>
 
-<!-- ═══════════════ SWIPE HINT ═══════════════ -->
-<div class="swipe-hint" id="swipeHint"></div>
+<!-- SWIPE HINT -->
+<div class="shint" id="shint"></div>
 
-<!-- ═══════════════ HEADER ═══════════════════ -->
+<!-- ══ HEADER ══ -->
 <header class="header">
-  <div class="logo">TJ<span class="green">APPS</span></div>
-  <div class="header-actions">
-    <button class="icon-btn" onclick="openAdmin()" title="Admin">🔒</button>
-  </div>
+  <div class="logo">TJ<span class="g">APPS</span></div>
+  <button class="hbtn" id="hbtn" onclick="openAdmin()">🔒</button>
 </header>
 
-<!-- ═══════════════ TABS ══════════════════════ -->
-
-<!-- TAB: Барномаҳо -->
-<div id="tab-apps" class="tab-content active">
+<!-- ══ TABS ══ -->
+<div id="tab-apps" class="tab on">
   <div class="page-title">Барномаҳо</div>
-  <div id="apps-list">
-    <div class="loader"><div class="spinner"></div>Бор мешавад...</div>
-  </div>
+  <div id="apps-list"></div>
 </div>
 
-<!-- TAB: Бозиҳо -->
-<div id="tab-games" class="tab-content">
+<div id="tab-games" class="tab">
   <div class="page-title">Бозиҳо</div>
-  <div id="games-list">
-    <div class="loader"><div class="spinner"></div>Бор мешавад...</div>
-  </div>
+  <div id="games-list"></div>
 </div>
 
-<!-- TAB: Чустучӯ -->
-<div id="tab-search" class="tab-content">
-  <div class="search-bar">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input
-        class="search-input"
-        id="searchInput"
-        type="search"
-        placeholder="Чустучӯи барнома..."
-        oninput="doSearch()"
-        autocomplete="off"
-        autocorrect="off"
-        spellcheck="false"
-      >
+<div id="tab-search" class="tab">
+  <div class="sbar">
+    <div class="swrap">
+      <span class="sico">🔍</span>
+      <input class="sinput" id="sinput" type="search" placeholder="Чустучӯи барнома..." oninput="doSearch()" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
   </div>
-  <div id="search-results"></div>
+  <div id="sresults"></div>
 </div>
 
-<!-- ═══════════════ BOTTOM NAV ════════════════ -->
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('apps', this)">
-    <div class="nav-pill">
-      <span class="nav-icon">⊞</span>
-    </div>
-    <span class="nav-label">Барномаҳо</span>
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bnav">
+  <button class="nbtn on" onclick="switchTab('apps',this)">
+    <div class="npill"><span class="nico">⊞</span></div>
+    <span class="nlbl">Барномаҳо</span>
   </button>
-
-  <button class="nav-btn" onclick="switchTab('games', this)">
-    <div class="nav-pill">
-      <span class="nav-icon">🎮</span>
-    </div>
-    <span class="nav-label">Бозиҳо</span>
+  <button class="nbtn" onclick="switchTab('games',this)">
+    <div class="npill"><span class="nico">🎮</span></div>
+    <span class="nlbl">Бозиҳо</span>
   </button>
-
-  <button class="nav-btn" onclick="switchTab('search', this)">
-    <div class="nav-pill">
-      <span class="nav-icon">🔍</span>
-    </div>
-    <span class="nav-label">Чустучӯ</span>
+  <button class="nbtn" onclick="switchTab('search',this)">
+    <div class="npill"><span class="nico">🔍</span></div>
+    <span class="nlbl">Чустучӯ</span>
   </button>
 </nav>
 
-<!-- ═══════════════ OVERLAY: SETUP ════════════ -->
-<div class="overlay" id="setupOverlay">
+<!-- ══ OVERLAY: SETUP ══ -->
+<div class="ov" id="ov-setup">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">⚙️ Танзимоти Admin</div>
-
-    <div class="info-box">
-      Ин танҳо барои <strong>Admin</strong> лозим аст.<br>
-      Меҳмонон бидуни танзим APK-ҳоро мебинанд. ✅
+    <div class="handle"></div>
+    <div class="stitle">⚙️ Танзимоти Admin</div>
+    <div class="ibox">
+      Танҳо барои <strong>Admin</strong> лозим аст.<br>
+      Меҳмонон бидуни танзим APK-ҳоро мебинанд ✅
     </div>
-
-    <div class="form-group">
-      <label class="form-label">GitHub Token</label>
-      <input class="form-input" id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="new-password">
-      <p class="form-hint">
-        github.com → Settings → Developer settings →
-        Personal access tokens → Tokens (classic) →
-        Generate → <strong>repo ✅</strong> → Copy
-      </p>
+    <div class="fg">
+      <label class="fl">GitHub Token</label>
+      <input class="fi" id="setup-token" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="new-password">
+      <p class="fhint">github.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate → <strong>repo ✅</strong> → Copy</p>
     </div>
-
-    <div class="form-group">
-      <label class="form-label">Пароли Admin</label>
-      <input class="form-input" id="setupPass" type="password" placeholder="Пароли худро интихоб кун" autocomplete="new-password">
+    <div class="fg">
+      <label class="fl">Пароли Admin</label>
+      <input class="fi" id="setup-pass" type="password" placeholder="Пароли худро интихоб кун" autocomplete="new-password" onkeyup="if(event.key==='Enter')saveSetup()">
     </div>
-
-    <button class="btn-primary" onclick="saveSetup()">✅ Нигоҳ доштан</button>
-    <button class="btn-secondary" onclick="closeOverlay('setupOverlay')">✕ Бекор кардан</button>
+    <button class="bp" onclick="saveSetup()">✅ Нигоҳ доштан</button>
+    <button class="bs" onclick="closeOv('ov-setup')">✕ Бекор кардан</button>
   </div>
 </div>
 
-<!-- ═══════════════ OVERLAY: PASSWORD ═════════ -->
-<div class="overlay" id="passOverlay">
+<!-- ══ OVERLAY: PASSWORD ══ -->
+<div class="ov" id="ov-pass">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">🔐 Пароли Admin</div>
-
-    <input
-      class="pass-input"
-      type="password"
-      id="passInput"
-      placeholder="••••"
-      maxlength="20"
-      onkeyup="if(event.key==='Enter') checkPass()"
-      autocomplete="current-password"
-    >
-    <p class="pass-error" id="passError">❌ Пароли нодуруст!</p>
-
-    <button class="btn-primary" onclick="checkPass()">🔓 Кушодан</button>
-    <button class="btn-secondary" onclick="closeOverlay('passOverlay')">✕ Бекор кардан</button>
+    <div class="handle"></div>
+    <div class="stitle">🔐 Пароли Admin</div>
+    <input class="pinput" id="pinput" type="password" placeholder="••••" maxlength="20" autocomplete="current-password" onkeyup="if(event.key==='Enter')checkPass()">
+    <p class="perr" id="perr">❌ Пароли нодуруст!</p>
+    <button class="bp" onclick="checkPass()">🔓 Кушодан</button>
+    <button class="bs" onclick="closeOv('ov-pass')">✕ Бекор кардан</button>
   </div>
 </div>
 
-<!-- ═══════════════ OVERLAY: ADD APP ══════════ -->
-<div class="overlay" id="adminOverlay">
+<!-- ══ OVERLAY: ADD APP ══ -->
+<div class="ov" id="ov-add">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">➕ Илова кардани APK</div>
+    <div class="handle"></div>
+    <div class="stitle">➕ Илова кардани APK</div>
 
-    <!-- ICON PICKER -->
-    <div class="form-group">
-      <label class="form-label">Аломат (Icon)</label>
-      <div class="icon-row">
-        <div class="icon-preview" id="iconPreview" onclick="document.getElementById('iconUpload').click()">
+    <!-- ICON -->
+    <div class="fg">
+      <label class="fl">Аломат (Icon)</label>
+      <div class="icrow">
+        <div class="icprev" id="icprev" onclick="document.getElementById('imgfile').click()">
           <span>📦</span>
         </div>
-        <div class="icon-text">
-          <p style="font-size:0.78rem;color:var(--text3);margin-bottom:10px;">Расм ё emoji интихоб кун</p>
-          <div class="icon-action-btns">
-            <button class="small-btn" onclick="document.getElementById('iconUpload').click()">📷 Расм</button>
-            <button class="small-btn" onclick="toggleEmojiPicker()">😀 Emoji</button>
-          </div>
+        <div class="ictxt">
+          <p style="font-size:.78rem;color:var(--text3);margin-bottom:10px">Расм ё emoji интихоб кун</p>
+          <button class="sbtn" onclick="document.getElementById('imgfile').click()">📷 Расм</button>
+          <button class="sbtn" onclick="toggleEp()">😀 Emoji</button>
         </div>
       </div>
-      <input type="file" id="iconUpload" accept="image/*" onchange="handleIcon(this)" style="display:none">
-      <div id="emojiPicker" style="display:none;">
-        <div class="emoji-grid" id="emojiGrid"></div>
+      <input type="file" id="imgfile" accept="image/*" onchange="handleImg(this)" style="display:none">
+      <div id="epicker" style="display:none">
+        <div class="egrid" id="egrid"></div>
       </div>
     </div>
 
     <!-- NAME -->
-    <div class="form-group">
-      <label class="form-label">Номи барнома *</label>
-      <input class="form-input" id="appName" type="text" placeholder="масалан: WhatsApp" onkeyup="if(event.key==='Enter') qs('#appVersion').focus()">
+    <div class="fg">
+      <label class="fl">Номи барнома *</label>
+      <input class="fi" id="f-name" type="text" placeholder="масалан: WhatsApp">
     </div>
 
-    <!-- VERSION & SIZE -->
-    <div class="form-group form-row">
+    <!-- VER + SIZE -->
+    <div class="fg frow">
       <div>
-        <label class="form-label">Версия</label>
-        <input class="form-input" id="appVersion" type="text" placeholder="1.0.0">
+        <label class="fl">Версия</label>
+        <input class="fi" id="f-ver" type="text" placeholder="1.0.0">
       </div>
       <div>
-        <label class="form-label">Андоза</label>
-        <input class="form-input" id="appSize" type="text" placeholder="50 MB">
+        <label class="fl">Андоза</label>
+        <input class="fi" id="f-size" type="text" placeholder="50 MB">
       </div>
     </div>
 
-    <!-- CATEGORY -->
-    <div class="form-group">
-      <label class="form-label">Категория *</label>
-      <select class="form-select" id="appCat">
+    <!-- CAT -->
+    <div class="fg">
+      <label class="fl">Категория *</label>
+      <select class="fsel" id="f-cat">
         <option value="app">📱 Барнома</option>
         <option value="game">🎮 Бозӣ</option>
       </select>
     </div>
 
     <!-- URL -->
-    <div class="form-group">
-      <label class="form-label">Линки скачат</label>
-      <input class="form-input" id="appUrl" type="url" placeholder="https://...">
-      <p class="form-hint">Google Drive, Telegram, MediaFire, Mega...</p>
+    <div class="fg">
+      <label class="fl">Линки скачат</label>
+      <input class="fi" id="f-url" type="url" placeholder="https://...">
+      <p class="fhint">Google Drive, Telegram, MediaFire, Mega...</p>
     </div>
 
-    <!-- DESCRIPTION -->
-    <div class="form-group">
-      <label class="form-label">Тавсиф (Описание)</label>
-      <textarea class="form-input" id="appDesc" rows="3" placeholder="Барнома дар бораи чист? Хусусиятҳои он..." style="resize:none;line-height:1.5;"></textarea>
+    <!-- DESC -->
+    <div class="fg">
+      <label class="fl">Тавсиф</label>
+      <textarea class="fi" id="f-desc" rows="3" placeholder="Барнома дар бораи чист..." style="resize:none;line-height:1.5"></textarea>
     </div>
 
     <!-- VIDEO -->
-    <div class="form-group">
-      <label class="form-label">Линки Видео (ихтиёрӣ)</label>
-      <input class="form-input" id="appVideo" type="url" placeholder="YouTube ё mp4 линк...">
-      <p class="form-hint">YouTube линк ё видеои мустақим — барои намоиш дар барнома</p>
+    <div class="fg">
+      <label class="fl">Линки Видео (ихтиёрӣ)</label>
+      <input class="fi" id="f-vid" type="url" placeholder="YouTube ё mp4 линк...">
+      <p class="fhint">YouTube линк — барои намоиши видео дар барнома</p>
     </div>
 
-    <!-- SAVING -->
-    <div class="saving-row" id="savingRow">
-      <div class="spinner"></div>
+    <div class="srow" id="srow">
+      <div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div>
       GitHub-га нигоҳ медорад...
     </div>
 
-    <button class="btn-primary" id="addBtn" onclick="addApp()">✅ Илова кардан</button>
-    <button class="btn-secondary" onclick="closeOverlay('adminOverlay')">✕ Бекор кардан</button>
+    <button class="bp" id="addbtn" onclick="addApp()">✅ Илова кардан</button>
+    <button class="bs" onclick="closeOv('ov-add')">✕ Бекор кардан</button>
   </div>
 </div>
 
-<!-- ═══════════════ OVERLAY: DETAIL ═══════════ -->
-<div class="overlay" id="detailOverlay">
+<!-- ══ OVERLAY: DETAIL ══ -->
+<div class="ov" id="ov-detail">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div id="detailContent"></div>
+    <div class="handle"></div>
+    <div id="detail-content"></div>
   </div>
 </div>
 
-<!-- ═══════════════ TOAST ═════════════════════ -->
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════ SCRIPTS ═══════════════════ -->
 <script src="script.js"></script>
-
 </body>
-      </html>
-        
+          </html>
+      
